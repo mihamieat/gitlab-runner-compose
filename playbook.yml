@@ -1,0 +1,28 @@
+
+- name: Clone and run gitlab-runner repo
+  hosts: localhost
+  become: true
+  tasks:
+    - name: Clone the Git repository
+      ansible.builtin.git:
+        repo: https://github.com/mihamieat/gitlab-runner-compose.git
+        dest: /opt/gitlab-runner
+        version: master
+
+    - name: Run Docker Compose
+      ansible.builtin.shell: |
+        docker compose up -d
+      args:
+        chdir: /opt/gitlab-runner
+    
+    - name: Run gilab-runner register
+      ansible.builtin.shell: |
+        gitlab-runner register \
+          --non-interactive \
+          --url "${CI_SERVER_URL}" \
+          --registration-token "${REGISTRATION_TOKEN}" \
+          --executor "${RUNNER_EXECUTOR}" \
+          --description "${RUNNER_DESCRIPTION}" \
+          --run-untagged="true" \
+          --locked="false" \
+          --access-level="not_protected"
